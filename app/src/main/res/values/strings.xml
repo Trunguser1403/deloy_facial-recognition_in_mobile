@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Face App</string>
+    <string name="title_activity_idsaving_detail_host">IdsavingDetailHostActivity</string>
+    <string name="delete_image">Delete Image</string>
+    <string name="title_idsaving_detail">Id_saving Detail</string>
+    <string name="title_activity_id_saving">id_saving</string>
+<!--    <string name="title_idsaving_list">Items</string>-->
+
+</resources>
