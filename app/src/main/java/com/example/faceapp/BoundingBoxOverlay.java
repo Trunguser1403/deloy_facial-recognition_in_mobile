@@ -18,7 +18,10 @@ import java.util.List;
 
 public class BoundingBoxOverlay extends View {
     private List<Rect> boundingBoxes = new ArrayList<>();
+    private List<String> names = new ArrayList<>();
     private Paint paint;
+    private Paint textPaint; // Paint object for drawing text
+
 
     private int cameraWidth = 640;
     private int cameraheight = 480;
@@ -34,12 +37,18 @@ public class BoundingBoxOverlay extends View {
         paint.setColor(0xFFFF0000); // Red color for bounding box
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(5.0f);
+
+        textPaint = new Paint();
+        textPaint.setColor(Color.WHITE); // White color for text
+        textPaint.setTextSize(24); // Text size
+        textPaint.setStyle(Paint.Style.FILL);
     }
 
-    public void setBoundingBoxes(List<Rect> boundingBoxes) {
+    public void setBoundingBoxes(List<Rect> boundingBoxes, List<String> names) {
         scaleW = (float) getWidth() / cameraheight;
         scaleH = (float)  getHeight() /  cameraWidth;
         this.boundingBoxes = boundingBoxes;
+        this.names = names;
         invalidate(); // Request to redraw the view
     }
 
@@ -54,8 +63,16 @@ public class BoundingBoxOverlay extends View {
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
-        for (Rect boundingBox : boundingBoxes) {
-            canvas.drawRect(scaleRect(boundingBox), paint);
+        for (int i = 0; i < boundingBoxes.size(); i++) {
+            Rect rect_bbx = scaleRect(boundingBoxes.get(i));
+            canvas.drawRect(rect_bbx, paint);
+
+            String name = names.get(i);
+            float textWidth = textPaint.measureText(name);
+            float textX = rect_bbx.left + (rect_bbx.width() - textWidth) / 2;
+            float textY = rect_bbx.bottom + 24; // Adjust this offset as needed
+
+            canvas.drawText(name, textX, textY, textPaint);
         }
 
 

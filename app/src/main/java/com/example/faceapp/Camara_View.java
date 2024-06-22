@@ -24,10 +24,14 @@ import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.Person;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.widget.Toast;
 
+import com.example.faceapp.ObjectData.PersonEmbeddings;
+import com.example.faceapp.database_manager.ReadDatabase;
+import com.example.faceapp.distance_metric.Distance_Metric;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
@@ -61,6 +65,8 @@ public class Camara_View extends AppCompatActivity {
     private BoundingBoxOverlay boundingBoxOverlay;
     private PreviewView previewView;
     private TextView textView;
+    private List<PersonEmbeddings> personList;
+    private ReadDatabase embeddingDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +77,8 @@ public class Camara_View extends AppCompatActivity {
         boundingBoxOverlay = findViewById(R.id.boundingBoxOverlay);
         textView = findViewById(R.id.textView3);
 
-
+        embeddingDB = new ReadDatabase(this);
+        personList = embeddingDB.getAllEmbeddingsWithNames();
 
 
         FaceDetectorOptions options =
@@ -152,11 +159,8 @@ public class Camara_View extends AppCompatActivity {
             inputStream.read(bytes);
             buffer.put(bytes);
             inputStream.close();
-
             interpreter = new Interpreter(buffer);
-            textView.setText("load ok");
         } catch (IOException e) {
-            textView.setText("load fail");
             e.printStackTrace();
         }
     }
@@ -183,18 +187,22 @@ public class Camara_View extends AppCompatActivity {
                         .addOnSuccessListener(faces -> {
                             List<Rect> boundingBoxes = new ArrayList<>();
                             List<String> names = new ArrayList<>();
+
                             for (Face face : faces) {
                                 Rect boundingBox = face.getBoundingBox();
                                 Bitmap faceBitmap = cropToBoundingBox(mediaImage, boundingBox);
                                 if (faceBitmap != null) {
                                     float[] faceEmbeddings = getFaceEmbeddings(faceBitmap);
-                                    textView.setText("emb" + faceEmbeddings[0]);
-//                                String recognizedPerson = recognizeFace(faceEmbeddings);
+                                    String recognizedPerson = recognizeFace(faceEmbeddings);
+
                                     boundingBoxes.add(boundingBox);
+                                    names.add(recognizedPerson);
 
                                 }
+                                drawBoundingBoxAndName(boundingBoxes,  names);
+
                             }
-                            drawBoundingBox(boundingBoxes);
+
                         })
                         .addOnCompleteListener(task -> imageProxy.close());
             }
@@ -258,17 +266,30 @@ public class Camara_View extends AppCompatActivity {
         }
 
         private String recognizeFace(float[] faceEmbeddings) {
-            // Compare embeddings with your database and return the recognized person's name
-            // This is a placeholder for demonstration
-            return "Person Name";
+            float min_dis = Float.MAX_VALUE;
+            String name = "";
+
+            for (PersonEmbeddings p: personList){
+                List<float[]> list_emb = p.getEmbeddings();
+                for (float[] emb: list_emb){
+                    float dis = Distance_Metric.cosineSimilarity(faceEmbeddings, emb);
+                    if (dis < min_dis){
+                        min_dis = dis;
+                        name = p.getName();
+                    }
+                }
+
+            }
+            if (min_dis < 0.6)  {
+                name = "Unknown";
+            }
+            return name;
         }
 
-        private void drawBoundingBox(List<Rect> boundingBoxes) {
+        private void drawBoundingBoxAndName(List<Rect> boundingBoxes, List<String> names) {
             runOnUiThread(() -> {
-                boundingBoxOverlay.setBoundingBoxes(boundingBoxes);
+                boundingBoxOverlay.setBoundingBoxes(boundingBoxes, names);
             });
-
-
         }
     }
 

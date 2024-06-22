@@ -75,11 +75,11 @@ public class ImagesActivity extends AppCompatActivity {
         });
     }
 
+
+
     private void loadImagesFromFolder(String folderName) {
 
         File folder = new File(getFilesDir(), folderName);
-
-        Log.d("loadImagesFromFolder: ", folder.getAbsolutePath());
 
         if (folder.exists() && folder.isDirectory()) {
             File[] files = folder.listFiles();
@@ -97,8 +97,6 @@ public class ImagesActivity extends AppCompatActivity {
                 imageAdapter.notifyDataSetChanged();
             }
 
-
-            imageAdapter.notifyDataSetChanged();
         } else {
             Toast.makeText(this, "Folder does not exist", Toast.LENGTH_SHORT).show();
         }

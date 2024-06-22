@@ -3,6 +3,7 @@ package com.example.faceapp;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,23 +18,33 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.faceapp.database_manager.FaceAppDatabase;
+import com.example.faceapp.database_manager.ReadDatabase;
+
 import java.io.File;
 import java.util.ArrayList;
 
 public class ID_Saving extends AppCompatActivity {
 
     private ListView folderListView;
-    private Button addFolderButton;
+    private Button addFolderButton, saveButton, btn_test;
     private ArrayList<String> folderList;
     private FolderAdapter folderAdapter;
+    private FaceAppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_id_saving);
 
+        btn_test = findViewById(R.id.button_test);
+
+
+        db = new FaceAppDatabase(this);
+
         folderListView = findViewById(R.id.id_list);
         addFolderButton = findViewById(R.id.add_id);
+        saveButton = findViewById(R.id.saveButton);
 
         folderList = new ArrayList<>();
 
@@ -49,8 +60,35 @@ public class ID_Saving extends AppCompatActivity {
             }
         });
 
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                db.save(folderList);
+            }
+        });
+        ReadDatabase rb = new ReadDatabase(this);
+        btn_test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rb.getAllEmbeddingsWithNames();
+            }
+        });
+
+
         loadFolders();
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
     private void showAddFolderDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -99,7 +137,6 @@ public class ID_Saving extends AppCompatActivity {
         File[] files = getFilesDir().listFiles();
         if (files != null) {
             for (File file : files) {
-                Log.d("loadFolders: ", file.getAbsolutePath()+"");
 
                 if (file.isDirectory()) {
                     folderList.add(file.getName());
